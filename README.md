@@ -1,3 +1,3 @@
 # Package utilitaire ecotools
 
-Développé par l'équipe ECOVEA.
+Développé par l'équipe ECOVEA, EABX.
