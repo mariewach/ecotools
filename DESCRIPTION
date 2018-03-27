@@ -3,9 +3,9 @@ Title: package utilitaires ecovea
 Version: 0.0.0.9000
 Authors@R: c(
   person("David", "Carayon", email = "david.carayon@irstea.fr", role = c("aut", "cre")),
-  person("Sebastien", "Boutry", email = "sebastien.boutry@irstea.fr", role = c("aut", "cre")),
-  person("Thibault", "Leboucher", email = "thibault.leboucher@irstea.fr", role = c("aut", "cre")),
-  person("Marie", "Wach", email = "marie.wach@irstea.fr", role = c("aut", "cre"))
+  person("Sebastien", "Boutry", email = "sebastien.boutry@irstea.fr", role = c("aut")),
+  person("Thibault", "Leboucher", email = "thibault.leboucher@irstea.fr", role = c("aut")),
+  person("Marie", "Wach", email = "marie.wach@irstea.fr", role = c("aut"))
   )
 Description: Systeme qui regroupe les fonctions principales pour la gestion des donnees en ecologie, 
   themes pour les graphiques, organisation des repertoires, utilisation de bases de donnees.
