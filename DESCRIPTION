@@ -1,6 +1,6 @@
 Package: ecotools
 Title: package utilitaires ecovea
-Version: 0.0.0.9000
+Version: 0.1
 Authors@R: c(
   person("David", "Carayon", email = "david.carayon@irstea.fr", role = c("aut", "cre")),
   person("Sebastien", "Boutry", email = "sebastien.boutry@irstea.fr", role = c("aut")),
