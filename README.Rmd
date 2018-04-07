@@ -11,5 +11,5 @@ Package utilitaire développé et utilisé en interne par l'équipe Ecovea (IRST
 
 <Présentation des principales fonctions>
 
-Pour en savoir plus : https://davidcarayon.github.io/ecotools/index.html
+Pour en savoir plus : https://davidcarayon.github.io/ecotools/
 
