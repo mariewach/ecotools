@@ -25,3 +25,5 @@ Suggests: testthat,
     knitr,
     rmarkdown
 VignetteBuilder: knitr
+URL: https://github.com/davidcarayon/ecotools
+BugReports: https://github.com/davidcarayon/ecotools/issues
