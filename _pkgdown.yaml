@@ -15,3 +15,6 @@ navbar:
       menu:
       -  text: Travailler avec des NA
       -  text: Attention à Matrify
+    - icon: fa-file-code-o
+      text: "Fonctions"
+      href: reference/index.html
