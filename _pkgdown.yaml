@@ -1,0 +1,17 @@
+title: ecotools
+url: https://davidcarayon.github.io/ecotools
+template:
+  params:
+    bootswatch: flatly
+navbar:
+  left:
+    - icon: fa-home
+      href: index.html
+    - text: "Articles"
+      menu:
+      -  text: Travailler avec des NA
+      -  text: Attention à Matrify
+    - text : "Vignettes"
+      menu:
+      -  text: Travailler avec des NA
+      -  text: Attention à Matrify
