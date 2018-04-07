@@ -7,7 +7,9 @@
 [![CRAN_Status_Badge](http://www.r-pkg.org/badges/version/ecotools)](https://cran.r-project.org/package=ecotools)
 [![packageversion](https://img.shields.io/badge/Package%20version-0.1-orange.svg?style=flat-square)](commits/master)
 
-Développé par l'équipe ECOVEA, EABX.
+Package utilitaire développé et utilisé en interne par l'équipe Ecovea (IRSTEA/EABX)
 
-Site associé : https://davidcarayon.github.io/ecotools/index.html
+<Présentation des principales fonctions>
+
+Pour en savoir plus : https://davidcarayon.github.io/ecotools/index.html
 
