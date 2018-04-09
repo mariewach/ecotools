@@ -18,3 +18,9 @@ navbar:
     - icon: fa-file-code-o
       text: "Fonctions"
       href: reference/index.html
+  right:
+    - icon: fa-tint
+      text: Hydrobio-DCE
+      href: https://hydrobio-dce.irstea.fr/
+    - icon: fa-github
+      href: https://github.com/davidcarayon/ecotools
