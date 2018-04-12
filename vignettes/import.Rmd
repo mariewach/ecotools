@@ -1,0 +1,74 @@
+---
+title: "Importer des données"
+author: "David Carayon"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+# Importation depuis pandore
+<br>
+
+## Via RODBC (windows)
+<br>
+
+Penser à installer le [pilote ODBC](https://dev.mysql.com/downloads/connector/odbc/3.51.html). **Attention** pandore est en 32 bits, il faut donc R en 32 bits également.
+
+Puis le configurer : 
+
+<img src="img/config_p.png" alt="Configuration ODBC" width="400">
+
+
+Puis, le package `RODBC` peut être utilisé dans R :
+<br>
+
+```{r eval=FALSE}
+library(RODBC)
+
+#Connexion à la base
+pandore=odbcConnect("pandore",uid="******",pwd="********")
+
+# Exemple de requête 
+typo=sqlQuery(pandore,"SELECT cd_site, classe_taille, riviere, commune FROM site")
+```
+
+<br>
+
+## Via RMySQL (autres)
+
+Le package `RMySQL` (existe aussi pour RPostGreSQL, etc.) s'appuie sur le package `DBI`
+
+```{r eval=FALSE}
+library(RMySQL)
+pandore <- dbConnect(dbDriver("MySQL"), dbname="pandore",
+                 host="195.221.113.106", port=3306,
+                 user="********", password="*******")
+typo<-dbGetQuery(pandore,"SELECT cd_site, classe_taille, riviere, commune FROM site",n=-1)
+```
+
+
+# Package feather
+
+Feather est un projet visant à créer un format de fichier qui serait la signature de Rstudio. Les [benchmark](https://blog.dominodatalab.com/the-r-data-i-o-shootout/) réalisés ont démontré que sa vitesse d'écriture et de lecture sont bien plus rapides que du .csv
+
+```{r warning=FALSE}
+library(feather)
+
+data(mtcars)
+
+write_feather(mtcars,"mtcars.feather") # Produit un fichier signature de R : .feather
+
+read_feather("mtcars.feather")
+
+```
+
+<br>
+
+# Données R data
+
+<br>
+
+# Fichiers plats (csv, texte)

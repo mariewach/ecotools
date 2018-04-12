@@ -7,17 +7,24 @@ navbar:
   left:
     - icon: fa-home
       href: index.html
-    - text: "Articles"
-      menu:
-      -  text: Travailler avec des NA
-      -  text: Attention à Matrify
-    - text : "Vignettes"
-      menu:
-      -  text: Travailler avec des NA
-      -  text: Attention à Matrify
+    - icon: fa-book
+      text: "Documentation"
+      href: articles/vign_ecotools.html
     - icon: fa-file-code-o
       text: "Fonctions"
       href: reference/index.html
+    - text: "Articles"
+      menu:
+      -  text: Bonnes pratiques générales
+         href: articles/bonnes_pratiques.html
+      -  text: Importer des données
+         href: articles/import.html
+      -  text: Introduction au tidyverse
+         href: articles/tidy.html
+      -  text: Travailler avec des NA
+         href: articles/na_work.html
+      -  text: Attention à matrify() !
+         href: articles/pb_spread.html
   right:
     - icon: fa-tint
       text: Hydrobio-DCE

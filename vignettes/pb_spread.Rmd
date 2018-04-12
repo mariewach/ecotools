@@ -1,0 +1,110 @@
+---
+title: "Attention à matrify()"
+author: "David Carayon"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+Info à retenir : L'utilisation de `spread` implique qu'il n'y ai pas de doublons taxon/opecont.
+
+NOTE : la fonction kable qui enveloppe les tableaux permet de sortir des tableaux HTML plus lisibles
+
+```{r, message=FALSE, warning=FALSE}
+library(tidyverse)
+library(knitr) # pour kable
+
+# data
+x <- data.frame(sample = 1:7,
+                species = c("a","b","c","d","e","f","g"),
+                abundance = sample(1:100,7))
+kable(x, align="c")
+```
+        
+Si on spread ce jeu de données, il n'y a pas de soucis particulier.
+
+```{r}
+
+kable(spread(x, key=species, value=abundance), align="c")    
+```
+
+Maintenant, on fait pareil en modifiant le tableau pour qu'il y ait deux fois le taxon a dans le site 1.
+
+```{r}
+x[2,2] <- "a" ; x[2,1] <- 1
+kable(x, align="c")
+```
+
+Le spread va renvoyer une erreur : il n'est pas capable de faire la somme des deux abondances de a au site 1.
+
+```{r}
+# Trycatch pour ignorer l'erreur
+tryCatch({
+  spread(x, key=species, value=abundance)}, # La fonction
+  error=function(e){cat("ERROR :",conditionMessage(e), "\n")})    
+```
+
+Matrify ne renvoie pas d'erreur :
+
+```{r, echo=FALSE}
+matrify <- function(data)
+{
+    if (ncol(data) != 3) stop('data frame must have three column format')
+    plt <- data[,1]
+    spc <- data[,2]
+    abu <- data[,3]
+    plt.codes <- levels(factor(plt))
+    spc.codes <- levels(factor(spc))
+    taxa <- matrix(0,nrow=length(plt.codes),ncol=length(spc.codes))
+    row <- match(plt,plt.codes)
+    col <- match(spc,spc.codes)
+    for (i in 1:length(abu)) {
+        taxa[row[i],col[i]] <- abu[i]
+    }
+    taxa <- data.frame(taxa)
+    names(taxa) <- spc.codes
+    row.names(taxa) <- plt.codes
+    taxa
+}
+```
+
+```{r}
+kable(matrify(x), align="c")
+```
+
+On remarque, en revanche, que matrify ne va prendre qu'une seule des deux valeurs, comportement pas terrible et donc à éviter !
+
+Il faut donc résoudre le problème de doublons avant de spread.
+
+```{r}
+# On vérifie bien qu'il y a des doublons
+
+x %>%
+  group_by(sample,species) %>%
+  summarise(n = n_distinct(abundance)) %>%
+  filter(n>1) %>% 
+  kable(align="c")
+
+
+# On corrige le soucis en additionnant
+
+x <- x %>% 
+  group_by(sample,species) %>% 
+  summarise(abundance=sum(abundance))
+kable(x, align="c")
+```
+
+On peut enfin spread :
+
+```{r}
+kable(spread(x, key=species, value=abundance), align="c")
+```
+
+

@@ -1,0 +1,234 @@
+---
+title: "Introduction au tidyverse"
+author: "David Carayon"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, eval=FALSE)
+```
+
+<style type="text/css">
+
+body{ /* Normal  */
+      font-size: 15px;
+  }
+code.r{ /* Code block */
+    font-size: 12px;
+}
+pre { /* Code block - determines code spacing between lines */
+    font-size: 14px;
+}
+</style>
+
+# Le Tidyverse
+
+![](img/tidyverse.png)
+
+Le tidyverse est un projet de workflow de packages, fournissant des outils de programmation R complémentaires allant depuis l'import de données jusqu'à la visualisation et la communication des résultats.
+
+```{r, eval=TRUE, warning=FALSE, message=FALSE}
+library(tidyverse)
+```
+
+# Tibble
+
+![](img/tibble.png)
+
+Un des principaux apports du tidyverse, c'est le format de table tibble.
+
+Les tibble sont quasiment identiques aux data.frames, mais ils en font "moins". C'est à dire qu'ils ne changent jamais le type des variables par eux-mêmes, et affichent des messages d'erreurs au moindre problème (ce qui permet tout de même d'identifier des erreurs dès le début). Il sont également optimisés pour avoir un meilleur affichage dans la console.
+
+
+```{r, eval=TRUE}
+# tibble
+tb_iris<-tbl_df(iris[1:10,])
+tb_iris
+```
+
+La fonction `glimpse` est une version améliorée de `str`
+
+```{r, eval=TRUE}
+glimpse(tb_iris)
+```
+
+
+Attention cependant, des packages autres que ceux du tidyverse n'ont pas forcémment encore adapté leurs fonctions pour travailler avec des tibble. Il vaut peut être mieux dans ce cas là repasser sur du `as.data.frame`
+
+# Readr
+
+![](img/readr.png)
+
+Les tableaux tibble sont parfaitement compatibles avec les packages du tidyverse, c'est notamment le format de sortie des fonctions du package `readr`, qui sont très semblables aux fonctions d'import de base mais en beaucoup plus rapide (jusqu'à 10x selon certains tests)
+
+```{r}
+data<- read_csv2("data.csv")
+```
+
+# Feather
+
+![](img/feather.png)
+
+Feather est un projet visant à créer un format de fichier qui serait la signature de Rstudio. Les [benchmark](https://blog.dominodatalab.com/the-r-data-i-o-shootout/) réalisés ont démontré que sa vitesse d'écriture et de lecture sont bien plus rapides que du .csv
+
+```{r warning=FALSE}
+library(feather)
+
+data(mtcars)
+
+write_feather(mtcars,"mtcars.feather") # Produit un fichier signature de R : .feather
+
+read_feather("mtcars.feather")
+
+```
+
+
+# Dplyr et magitrr
+
+![](img/dplyr.png)
+
+Dplyr est un ensemble d'outils permettant de nettoyer, manipuler, réarranger ou résumer des données complexes.  
+
+C'est un pilier du tidyverse.  
+
+De part sa syntaxe proche de requêtes SQL (qui sont d'ailleurs traduites en SQL dans le cas de requêtes) dplyr permet une interaction avec des bases de données avec un langage beaucoup plus "R-friendly" et plus efficace que du R-SQL.  
+
+Le package tourne essentiellement autour de 7 fonctions phares, mais il en existe évidemment bien d'autres, disponibles [ici](https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf) :
+
+- `filter` : équivalent de `subset` qui permet de filter les données selon des opérateurs logiques.
+
+- `select` : autre équivalent de `subset` qui permet de sélectionner un certain nombre de colonnes mais de manière beaucoup plus pratique, mêlant des avantages de SQL et de R.
+
+- `left_join` : équivalent de `merge`, existe aussi en right_join (joint le tableau de gauche à celui de droite), full_join (équivalent de `all=TRUE`)
+
+- `arrange` : équivalent de `order` mais l'ordre se définit soit par arrange(variable) soit arrange(desc(variable)).
+
+- `group_by` : équivalent de `aggregate` mais beaucoup plus puissant quand il y a plus de 2 facteurs de groupes.
+
+- `mutate` : permet de créer une nouvelle colonne par une formule impliquant les autres colonnes (colonne3=colonne1+colonne2). `transmute` supprime les colonnes utilisées pour le calcul.
+
+- `summarise` : permet de créer un tableau résumant des infos (par ex : summarise (variable=median(variable))).
+
+![](img/magitr.png)
+
+**Toutes ces fonctions ne semblent être que des équivalents de fonctions de base, mais elles révèlent toute leur efficacité une fois combinées aux pipes `%>%` du package `magitrr`, qui permet d'alléger et simplifier de nombreux scripts.**  
+
+Pour faire simple, tout ce qui se situe à gauche d'un pipe devient le premier argument de la fonction suivant le pipe. Ce qui permet de se passer de nombreuses variables temporaires crées habituellement lors de chaque transformation.
+
+L'explication la plus parlante reste encore l'exemple. L'objectif est ici d'obtenir la valeur médiane du seuil de quantification pour chaque paramètre physico-chimique, par fraction d'eau analysée.  
+
+Dans les deux cas, la connexion est la même.
+
+```{r}
+# Connexion à Pandore
+library(RMySQL)
+
+pandore <- dbConnect(dbDriver("MySQL"), dbname="pandore",host="195.221.113.106", port=3306,user="*******", password="******")
+```
+
+
+# Processus classique
+
+Requêtes réalisées en SQL.
+
+```{r}
+# Requêtes 
+compil=dbGetQuery(pandore,"SELECT * FROM compil",n=-1) 
+opecont_phychi=dbGetQuery(pandore,"SELECT * FROM opecont_phychi")
+typo<-dbGetQuery(pandore,"SELECT cd_site, classe_taille, riviere, commune FROM site",n=-1)
+liste_chy<-dbGetQuery(pandore,"SELECT * FROM listes_phychi WHERE cd_param IN ('1301','1302','1303','1305','1311','1312','1313','1314','1319','1322','1335','1337','1338','1339','1340','1345','1347','1349','1350','1351','1433','1551','1819','1841','1842','5932','6018')",n=-1)
+lbl_param<-dbGetQuery(pandore, "SELECT cd_param, lbcourt_param FROM sandre_parametre",n=-1)
+river<-dbGetQuery(pandore, "SELECT cd_site, riviere, commune FROM site",n=-1)
+```
+
+
+```{r Processus}
+compil_chy<-compil[which(compil$support=="phychi"),] # Tri support phychi
+compil_opecont_chy<-merge(compil_chy,opecont_phychi, by.x="cd_opecont",by.y="cd_opecont") #liaison opecont/compil
+mix_phychi<-merge(compil_opecont_chy,liste_chy,by.x="cd_obsPhyChi",by.y="cd_obsPhyChi") # liaison avec liste
+lbl=merge(mix_phychi,lbl_param, by.x="cd_param",by.y="cd_param")# Liaison labels et codes
+chimie_brute_complet=lbl[,-c(2,6,7,8,9,11,14)]# tri des colonnes pour ne garder que les plus intéressantes
+chimie_brute=chimie_brute_complet[which(chimie_brute_complet$date_opecont>as.Date("2004-01-01")),] # tri des dates >2004
+chimie_brute=chimie_brute[which(chimie_brute$cd_fraction<25),] # Tri des fractions
+chimie_brute_remarque=chimie_brute[which(chimie_brute$cd_remarque==10),] # tri code remarque seuil de quanti
+summary1 <- aggregate(resultat ~ lbcourt_param, data=chimie_brute_remarque,FUN=median)
+summary2 <- aggregate(resultat ~ cd_fraction,data=chimie_brute_remarque,FUN=median)
+analyse_quanti <- merge(summary1, summary2,by="lbcourt_param")
+```
+
+
+# Processus via dplyr
+
+Import des données avec la syntaxe propre à dplyr :
+
+```{r}
+library(tidyverse) ; library(dbplyr)
+compil=tbl(pandore,"compil") 
+opecont_phychi=tbl(pandore,"opecont_phychi")
+typo=tbl(pandore,"site") %>% select(cd_site, classe_taille, riviere, commune)
+vecteur_param<-c('1301','1302','1303','1305','1311','1312','1313','1314','1319','1322','1335','1337','1338','1339','1340','1345','1347','1349','1350','1351','1433','1551','1819','1841','1842','5932','6018')
+liste_chy<-tbl(pandore,"listes_phychi") %>% filter(cd_param %in% vecteur_param)
+lbl_param<-tbl(pandore,"sandre_parametre") %>% select(cd_param, lbcourt_param)
+river<-tbl(pandore,"site") %>% select(cd_site, riviere)
+```
+
+
+En fait, derrière une requête dplyr, c'est bien du SQL qui est traduit :
+
+```{r}
+liste_chy %>% show_query()
+```
+
+<SQL>  
+SELECT *  
+FROM `listes_phychi`  
+WHERE (`cd_param` IN ('1301', '1302', '1303', '1305', '1311', '1312', '1313', '1314', '1319', '1322', '1335', '1337', '1338', '1339', '1340', '1345', '1347', '1349', '1350', '1351', '1433', '1551', '1819', '1841', '1842', '5932', '6018'))  
+
+
+Puis, on peut exécuter toutes les requêtes d'un trait :
+
+
+```{r}
+analyse_quanti<-compil %>%
+  filter(support=="phychi") %>%
+  left_join(opecont_phychi,by="cd_opecont") %>%
+  left_join(liste_chy,by="cd_obsPhyChi") %>%
+  left_join(lbl_param, by="cd_param") %>%
+  select(cd_param,cd_opecont:cd_support,cd_fraction,resultat, cd_remarque, lbcourt_param) %>%
+  filter(date_opecont > "2004-01-01") %>%
+  filter(cd_fraction < 25, cd_remarque==10) %>%
+  group_by(lbcourt_param) %>%
+  summarise(med_seuil=median(resultat))
+```
+
+**BILAN**
+
+Dplyr semble beaucoup mieux pensé pour créer des scripts propres, aérés, où l'erreur est beaucoup plus facile à identifier que lorsque l'on crée des variables temporaires. De plus, le temps d'exécution est beaucoup plus rapide (surtout pour les jointures de table).
+Dplyr, associé à quelques autres fonctions de tidyR (équivalent de matrify par exemple), permet de couvrir toute la partie import de données / mise en forme et préparation pour amorcer l'analyse & visualisation.
+
+# Broom
+
+
+![](img/broom.png)
+
+
+Il n'y a, pour le moment, pas de package dans le tidyverse dédidé à la modélisation. Cependant, le package broom fournit quelques fonctions très utiles :
+
+```{r, eval=TRUE}
+model<-lm(Sepal.Length~Sepal.Width, data=iris)
+summary(model)
+```
+
+Le problème ici, c'est que les différents éléments du modèle sont très difficile à indexer et à récupérer de manière automatique. Il serait donc mieux de ranger tout ça :
+
+```{r, eval=TRUE}
+library(broom)
+tidy(model)
+```
+

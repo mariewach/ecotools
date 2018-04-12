@@ -1,0 +1,205 @@
+---
+title: "Travailler avec des NA"
+author: "David Carayon"
+date: "`r Sys.Date()`"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+> Note : Cet article est fortemment inspiré d'une présentation à la rstudio::conf 2018 sur le traitement des données manquantes. 
+
+En tant que data scientist, rares sont les jeux de données auxquels nous sommes confrontés qui ne comportent pas de valeurs manquantes, les fameux `NA`, pour "Non applicable". 
+
+# L'option de facilité
+
+La manière la plus simple de gérer les valeurs manquantes, c'est de les retirer. Dans certain cas, il peut effectivement s'agir de la meilleure solution.
+
+<a href="https://imgflip.com/i/2409hy"><img src="https://i.imgflip.com/2409hy.jpg" title="made at imgflip.com"/></a>
+
+Cependant, en règle générale, les valeurs manquantes sont révélatrice de la qualité du jeu de données utilisé. De plus, leur analyse n'est pas forcémment dénuée de sens et peut apporter des informations supplémentaires à l'étude. 
+
+Pour cet article, on se basera sur le dataset `airquality`, un jeu de données représentant les mesures de différents composants atmosphériques à différentes dates.
+
+```{r, message=FALSE}
+library(dplyr)
+airquality <- tbl_df(airquality)
+airquality
+```
+
+On remarque déjà la présence de NA pour les variables Ozone et Solar.R. Certaines observations présentent un NA pour ces deux paramètres simultanés.
+
+Le jeu de données est dit "tidy" (une observation par ligne, une variable par colonne), nous allons donc pouvoir appliquer les méthodes du tidyverse pour analyser un peu ces valeurs absentes.
+
+# Les packages nécessaires :
+
+En plus des outils classiques du tidyverse (dplyr,ggplot2), nous allons utiliser deux packages dédiés aux valeurs manquantes : 
+
+```{r, message=FALSE}
+library(tidyverse)
+library(visdat)
+library(naniar)
+```
+
+# Le concept de data-shadow
+Le package `naniar` introduit un concept intéréssant pour l'étude des NA : les data-shadow.  
+Comme le nom l'indique, il s'agit de l'ombre des données utilisées, qui vont être codés de façon binaire : "NA" ou "!NA".
+
+Exemple : 
+
+```{r}
+# On considère un sous-échantillon pour l'exemple
+airquality[4:7,1:3] %>% bind_shadow()
+```
+
+Un deuxième tableau, représentant l'ombre du premier, vient donc se greffer à sa droite. C'est ce sous tableau qui va faciliter l'analyse des données manquantes.
+
+# Quantification des valeurs manquantes
+
+C'est parti pour les analyses ! 
+
+Dans un premier temps, on va observer graphiquement la répartition des NA à l'aide du package `visdat`.
+
+```{r}
+vis_miss(airquality)
+```
+
+Les données d'ozone semblent être les plus fragiles, avec près d'un quart de valeurs manquantes. Il manque également des données de radiation solaire.
+
+Maintenant, il est possible de résumer les valeurs manquantes sous forme d'un summary classique :
+
+```{r}
+miss_var_summary(airquality)
+```
+
+On a donc 37 valeurs manquantes pour l'ozone et 7 pour les radiations. Essayons de rentrer un peu plus dans le détail avec `dplyr` : 
+
+```{r}
+airquality %>%
+  group_by(Month) %>%
+  miss_var_summary() %>%
+  filter(n_miss > 0) # On ne regarde que les NA
+```
+
+Tiens, la majorité des NA proviennent du mois de juin...
+
+Maintenant, faisons appel à une autre de nos librairies préférées : `ggplot2`, en l'associant avec `geom_miss_point` fourni par `naniar`.
+
+
+```{r}
+ggplot(data=airquality, aes(x=Solar.R, y = Ozone)) +
+  geom_miss_point()
+```
+
+Cette représentation graphique permet de visualiser l'origine des valeurs manquantes en observant deux variables en simultané. De ce fait, cette visualisation permet d'identifier l'origine de ces valeurs manquantes : Dans quelles valeurs de radiations solaires nous manque-t-il plus de valeurs d'Ozone correspondantes ?
+
+# Utilisation des data-shadow
+
+La représentation graphique peut être poussée plus loin, c'est donc ici que nous ferons appel aux data-shadow :
+
+```{r}
+# Graphiquement
+airquality %>%
+  bind_shadow() %>%
+  ggplot(aes(x=Temp, fill = Ozone_NA)) +
+  geom_density(alpha=0.7)
+```
+
+Intéressant, il semblerait donc que les NA d'ozone se concentrent particulièrement sur les températures de 80°.
+
+Bien d'autres fonctions super intéressantes existent dans les deux packages utilisés, je vous renvoie donc vers leurs vignettes pour aller plus loin.
+
+# L'imputation
+
+Selon les jeux de données, un NA n'aura pas toujours la même signification. En écologie, par exemple, l'absence d'une espèce sur un site peut souvent être traduite en NA (case laissée vide par l'opérateur dans le tableur). Dans ce cas particulier, le NA peut être traduit en 0 sans que cela ne cause réellement de problème. Il reste cependant le risque que le NA ne soit pas une case vide mais plutôt une erreur de saisie ou une information perdue lors du transfert d'informations.
+En revanche, pour des données de température par exemple, un NA ne peut être traduit en "0°C".
+Dans le cas où les lignes de NA sont en très faible effectif, la solution peut donc être ici de tout simplement retirer ces ligne à l'aide de `na.omit`.
+
+Cependant, lorsque l'on jette un coup d'oeil à nos données 
+
+```{r}
+airquality
+```
+
+Il semble dommage de retirer les lignes comportant des NA, alors qu'elles comportent au moins toujours des données de température.
+Cependant, certaines méthodes, la PCA par exemple, n'acceptent que des tableaux sans NA comme données d'entrée. 
+
+La solution qui s'impose alors est **l'imputation**
+
+## Imputation ? kézako ?
+
+L'imputation est une technique qui permet de modéliser les valeurs manquantes selon des modèles pré-établis. Il existe des tas de modèles et le plus dur dans l'imputation reste de définir quel modèle utiliser en fonction de notre jeu de données. Quelques exemples :
+
+- imputation moyenne : On remplace chaque NA par la moyenne globale de la variable (`na.rm=TRUE` of course)
+- imputation linéaire : Une régression entre la variable à imputer et une ou plusieurs autres variables plus complètes peut, à condition que la relation soit correcte, permettre de "prédire" les données manquantes. Une telle régression peut être validée visuellement par les outils présentés plus haut combinés à un package dédié aux imputations : `simputation`
+
+```{r}
+library(simputation)
+airquality %>%
+  bind_shadow() %>%
+  simputation::impute_lm(Ozone ~ Temp + Wind) %>%
+  ggplot(aes(x=Temp,y=Ozone,color=Ozone_NA)) +
+  geom_point()
+```
+
+## Imputation multivariée
+
+Je mentionnais les PCA tout à l'heure. Il arrive parfois d'avoir un très grand jeu de données "à trou", où il est impossible de retirer les lignes présentant au moins un NA sous peine de virer plus de la moitié des données. Une autre méthode d'imputation, optimisée pour les analyses multivariées, a été développée dans le package `missMDA`.
+
+Ce package, complément de `FactomineR`, permet de faire de l'umputation simple et multiple. Le package impute les valeurs manquantes de sorte que les valeurs imputées n'aient pas d'influence sur les résultats de l'analyse factorielle, elles sont calculées de sortes à ce qu'elles rendent juste possible l'analyse.
+
+L'imputation se fait elle-même par des méthodes de réduction dimensionnelles (type ACP), ce qui lui permet de traiter de gros volumes de données.
+
+Plus d'infos : [missMDA](http://factominer.free.fr/missMDA/index_fr.html)
+
+```{r}
+library(missMDA) 
+
+# On passe d'abord tout en quantitatif, et on repasse au format df (missMDA n'est pas à la mode !)
+airquality <- airquality %>%
+  mutate_all(as.numeric) %>%
+  as.data.frame()
+
+
+# Choix du nombre d'axes à conserver pour l'imputation
+nb <- estim_ncpPCA(airquality,ncp.max=5)
+nb ## 1 axe est à conserver pour l'imputation 
+
+impute_air <- MIPCA(airquality,ncp=1) # Imputation
+
+airquality2 <- tbl_df(impute_air$res.imputePCA)
+airquality2
+```
+
+L'ACP devient donc possible.
+
+
+```{r, message=FALSE}
+library(FactoMineR) ; library(factoextra) ;library(ggthemes);library(viridis)
+
+airquality2 <- airquality2 %>% mutate_at(vars(Month, Day), as.character)
+
+# On garde la date en explicatif
+res.pca <- PCA(airquality2,quali.sup=c(5,6), graph = FALSE)
+
+
+# Variables
+fviz_pca_var(res.pca,col.var="cos2",col.circle="black",title = "Variables",
+             col.quanti.sup="chartreuse4") + theme_bw() +
+  scale_color_viridis(direction=-1)
+
+
+
+```
+
+
+
+# Informations de session
+
+```{r}
+sessionInfo()
+```
+
+

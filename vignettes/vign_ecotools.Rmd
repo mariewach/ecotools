@@ -1,5 +1,5 @@
 ---
-title: "ecotools"
+title: "Package utilitaire ecotools"
 author: "David Carayon, Sebastien Boutry, Thibault Leboucher, Marie Wach"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
