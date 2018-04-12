@@ -25,6 +25,9 @@ navbar:
          href: articles/na_work.html
       -  text: Attention à matrify() !
          href: articles/pb_spread.html
+    - icon: fa-newspaper
+      text: News
+      href: news/index.html
   right:
     - icon: fa-tint
       text: Hydrobio-DCE
